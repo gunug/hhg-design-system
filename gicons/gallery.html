@@ -193,14 +193,16 @@
     copyBtn.disabled = false;
   }
 
+  const BASE = 3; // 1배율 = 원본 viewBox 의 3배
+
   async function select(name, cell) {
-    selected = { name, w0: 100, h0: 100 };
+    selected = { name, w0: 300, h0: 300 };
     pv.src = name;                       // 상대경로 (로컬·Pages 동작)
     selNameEl.textContent = name;
     grid.querySelectorAll(".cell.active").forEach(c => c.classList.remove("active"));
     if (cell) cell.classList.add("active");
     const d = await svgDims(name);
-    selected.w0 = d.w; selected.h0 = d.h;
+    selected.w0 = d.w * BASE; selected.h0 = d.h * BASE;
     render(); save();
   }
 
@@ -224,8 +226,7 @@
   copyBtn.addEventListener("click", async () => {
     if (!selected) return;
     const W = Math.round(selected.w0 * ratio), H = Math.round(selected.h0 * ratio);
-    const alt = selected.name.replace(/\.svg$/i, "");
-    const tag = '<img src="' + PAGES_BASE + selected.name + '" alt="' + alt + '" width="' + W + '" height="' + H + '">';
+    const tag = '<img src="' + PAGES_BASE + selected.name + '" width="' + W + '" height="' + H + '" style="vertical-align:middle">';
     const ok = await copyText(tag);
     copyBtn.textContent = ok ? "copied!" : "copy fail";
     setTimeout(() => { copyBtn.textContent = "copy html tag"; }, 1200);
