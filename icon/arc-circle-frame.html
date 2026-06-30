@@ -771,6 +771,28 @@
       clone.setAttribute("height", "512");
       // 배경 rect 없음 → 항상 투명 배경
 
+      // 빈 여백 제거: 실제 벡터 경계(getBBox) + stroke 여유로 viewBox 재계산 (정사각 유지)
+      try {
+        const bb = src.getBBox();
+        if (bb.width > 0 && bb.height > 0) {
+          let maxSW = 0;
+          src.querySelectorAll("path,circle,line,rect,polygon,polyline,ellipse,text,tspan").forEach(el => {
+            const ecs = getComputedStyle(el);
+            if (ecs.stroke && ecs.stroke !== "none" && ecs.stroke !== "rgba(0, 0, 0, 0)") {
+              const m = ecs.strokeWidth.match(/(-?[\d.]+)px/);
+              const sw = m ? parseFloat(m[1]) : (parseFloat(ecs.strokeWidth) || 0);
+              if (sw > maxSW) maxSW = sw;
+            }
+          });
+          const pad = maxSW / 2 + 0.25;                       // stroke 절반 + 미세 여유
+          const x = bb.x - pad, y = bb.y - pad, w = bb.width + 2 * pad, h = bb.height + 2 * pad;
+          const side = Math.max(w, h);                        // 정사각
+          const vx = x + w / 2 - side / 2, vy = y + h / 2 - side / 2;
+          clone.setAttribute("viewBox",
+            vx.toFixed(3) + " " + vy.toFixed(3) + " " + side.toFixed(3) + " " + side.toFixed(3));
+        }
+      } catch (e) { /* getBBox 실패 시 원본 viewBox 유지 */ }
+
       // 클래스 규칙을 실제 값으로 주입 (선두께는 그룹별 --stroke-w 로 분리)
       const style = document.createElementNS(SVGNS, "style");
       style.textContent =
@@ -791,13 +813,48 @@
       return new XMLSerializer().serializeToString(clone);
     }
 
+    // ───────── 파일명 생성 ─────────
+    // hhg_<frame>__<front>__<back>__<timestamp>.svg  (구조는 이름, 색·두께 등 변형은 timestamp로 구분)
+    const sanitize = s => (s || "").toLowerCase()
+      .replace(/[^a-z0-9가-힣]+/g, "-").replace(/^-+|-+$/g, "") || "x";
+    const stripPrefix = id => id
+      .replace(/^frm_full_bold_/, "").replace(/^frm_(tl|tr|bl|br)_bold_/, "")
+      .replace(/^ins_bold_/, "").replace(/^logo_/, "").replace(/^face_/, "");
+    function frameName() {
+      const full = document.querySelector('.parts[data-full="1"] .part.active');
+      if (full && full.dataset.id !== "none") return sanitize(stripPrefix(full.dataset.id));
+      const ids = ["tl", "tr", "bl", "br"].map(q => {
+        const a = document.querySelector('.parts[data-quad="' + q + '"] .part.active');
+        return a ? a.dataset.id : "none";
+      });
+      if (ids.every(i => i === "none")) return "x";
+      const shapes = ids.map(i => i === "none" ? "x" : sanitize(stripPrefix(i)));
+      return shapes.every(s => s === shapes[0]) ? shapes[0] + "x4" : shapes.join("-");
+    }
+    function layerName(L) {
+      if (textApplied[L]) {
+        const ti = document.getElementById("t-input-" + L);
+        const first = (ti ? ti.value : "").replace(/\r/g, "").split("\n")[0] || "";
+        return "t-" + sanitize(first.slice(0, 8));
+      }
+      const a = document.querySelector('.parts[data-cen][data-layer="' + L + '"] .part.active');
+      if (!a || a.dataset.id === "none") return "x";
+      return sanitize(stripPrefix(a.dataset.id));
+    }
+    function exportFilename() {
+      const d = new Date(), p = n => String(n).padStart(2, "0");
+      const ts = d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) +
+                 "-" + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+      return "hhg_" + [frameName(), layerName("front"), layerName("back"), ts].join("__") + ".svg";
+    }
+
     // ───────── export: 합본 svg 다운로드 ─────────
     document.getElementById("c-export").addEventListener("click", () => {
       const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + buildStandaloneSvg();
       const url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml" }));
       const a = document.createElement("a");
       a.href = url;
-      a.download = "hhg-icon.svg";
+      a.download = exportFilename();
       a.click();
       URL.revokeObjectURL(url);
     });
