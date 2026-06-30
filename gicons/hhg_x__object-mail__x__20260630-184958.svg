@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="6.812 6.812 10.375 10.375" xmlns="http://www.w3.org/2000/svg" width="512" height="512"><style>#frame-group{--stroke-w:0.75}#slot-ins-front,#slot-ins-front-outline{--stroke-w:0.75}#slot-ins-back,#slot-ins-back-outline{--stroke-w:0.75}.arc{fill:rgba(28,28,23,1);stroke:#f5f4ec;stroke-width:var(--stroke-w);stroke-linecap:round;stroke-linejoin:round}.edge{fill:none;stroke:#f5f4ec;stroke-width:var(--stroke-w);stroke-linecap:round;stroke-linejoin:round}.fill{fill:rgba(28,28,23,1);stroke:none}.dot{fill:#f5f4ec;stroke:none}.ins{fill:none;stroke:#ffd400;stroke-width:calc(var(--stroke-w)*0.7);stroke-linecap:round;stroke-linejoin:round}.ins-dot{fill:#ffd400;stroke:none}.ins-solid{fill:#ffd400}.ins-text{fill:#ffd400;font-family:'Inter',-apple-system,sans-serif;font-weight:800}#slot-ins-back .ins{stroke:#8e8c82}#slot-ins-back .ins-dot,#slot-ins-back .ins-text,#slot-ins-back .ins-solid{fill:#8e8c82}</style>
+      <g id="frame-group">
+        <g id="slot-full"/>
+        <g id="slot-tl"/>
+        <g id="slot-tr"/>
+        <g id="slot-bl"/>
+        <g id="slot-br"/>
+      </g>
+      <g id="slot-ins-wrap" transform="translate(0,0) translate(12,12) scale(0.85) translate(-12,-12)">
+        <g id="slot-ins-back-outline" transform="translate(0,0) translate(12,12) scale(1) translate(-12,-12)"/>
+        <g id="slot-ins-back" transform="translate(0,0) translate(12,12) scale(1) translate(-12,-12)"/>
+        <g id="slot-ins-front-outline" transform="translate(0,0) translate(12,12) scale(1) translate(-12,-12)"/>
+        <g id="slot-ins-front" transform="translate(0,0) translate(12,12) scale(1) translate(-12,-12)"><rect xmlns="http://www.w3.org/2000/svg" class="ins" x="6.5" y="8" width="11" height="8" rx="1"/>
+  <path xmlns="http://www.w3.org/2000/svg" class="ins" d="M 6.8 8.6 L 12 12.4 L 17.2 8.6"/></g>
+      </g>
+    </svg>
