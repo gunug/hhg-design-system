@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HHG · gicons Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --hhg-yellow:#FFD400; --hhg-yellow-soft:#FFE766; --hhg-yellow-deep:#C9A600; --on-brand:#1A1A17;
+    --ink:#F5F4EC; --body:#CFCDC2; --muted:#8E8C82; --hairline:#33332B;
+    --canvas:#121210; --surface:#1C1C17; --surface-soft:#26261F;
+    --sh-sm:0 1px 2px rgba(0,0,0,.4); --sh-md:0 4px 16px rgba(0,0,0,.45);
+    --r-sm:6px; --r-md:10px; --r-lg:16px;
+    --font:"Inter",-apple-system,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;padding:48px 32px;font-family:var(--font);
+       background:var(--canvas);color:var(--body);-webkit-font-smoothing:antialiased;}
+  .head{text-align:center;margin-bottom:8px;}
+  .eyebrow{display:inline-block;background:#161613;color:var(--hhg-yellow);font-size:11px;font-weight:600;
+           letter-spacing:.12em;text-transform:uppercase;padding:5px 12px;border-radius:9999px;margin-bottom:10px;}
+  h1{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--ink);margin:0;}
+  .sub{font-size:13px;color:var(--muted);margin-top:8px;}
+  .toolbar{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;
+           max-width:1100px;margin:18px auto 0;}
+  .toolbar input[type="search"]{background:var(--surface-soft);border:1px solid var(--hairline);border-radius:var(--r-md);
+           color:var(--ink);font-family:var(--font);font-size:14px;padding:9px 14px;width:260px;outline:none;}
+  .toolbar input[type="search"]:focus{border-color:var(--hhg-yellow-deep);}
+  .toolbar .count{font-family:var(--mono);font-size:12px;color:var(--muted);}
+
+  .banner{display:none;max-width:760px;margin:20px auto 0;background:#2a1a14;border:1px solid #6b3a2a;
+          border-radius:var(--r-lg);padding:14px 18px;color:#ffd0c0;font-size:13px;line-height:1.55;}
+  .banner.show{display:block;}
+  .banner code{font-family:var(--mono);background:#3a221a;padding:1px 6px;border-radius:4px;color:#ffe;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;
+        max-width:1100px;margin:28px auto 0;}
+  .cell{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-lg);
+        padding:14px;box-shadow:var(--sh-sm);display:flex;flex-direction:column;gap:10px;}
+  .thumb{height:104px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;
+         background-color:#3a3a33;
+         background-image:
+           linear-gradient(45deg,#22221d 25%,transparent 25%),
+           linear-gradient(-45deg,#22221d 25%,transparent 25%),
+           linear-gradient(45deg,transparent 75%,#22221d 75%),
+           linear-gradient(-45deg,transparent 75%,#22221d 75%);
+         background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;}
+  .thumb img{max-width:80px;max-height:80px;width:auto;height:auto;}
+  .nm{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;
+      word-break:break-all;line-height:1.35;min-height:30px;display:flex;align-items:center;justify-content:center;}
+  .copy{font-family:var(--font);font-size:13px;font-weight:600;padding:8px 0;border:none;
+        border-radius:var(--r-md);background:var(--hhg-yellow);color:var(--on-brand);cursor:pointer;transition:.12s;}
+  .copy:hover{background:var(--hhg-yellow-deep);color:#fff;}
+  .empty{max-width:760px;margin:40px auto;text-align:center;color:var(--muted);font-size:14px;line-height:1.7;}
+  .empty code{font-family:var(--mono);background:var(--surface-soft);padding:1px 6px;border-radius:4px;color:var(--ink);}
+</style>
+</head>
+<body>
+  <div class="head">
+    <span class="eyebrow">HHG · gicons</span>
+    <h1>gicons Gallery</h1>
+    <div class="sub">폴더의 모든 SVG를 자동 로딩 · 복사 버튼은 GitHub Pages 주소를 <code>&lt;img&gt;</code> 태그로 클립보드에 복사</div>
+  </div>
+
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="이름으로 검색...">
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="banner" id="banner"></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none"></div>
+
+<script>
+  // ───────── 설정 ─────────
+  // 복사 버튼이 만들 절대 주소의 베이스 (GitHub Pages). 끝에 / 포함.
+  const PAGES_BASE = "https://onethelab.com/hhg-design-system/gicons/";
+  // GitHub Contents API (Pages 환경에서 폴더 목록 가져오기)
+  const GH = { owner: "gunug", repo: "hhg-design-system", path: "gicons", branch: "main" };
+
+  const grid = document.getElementById("grid");
+  const banner = document.getElementById("banner");
+  const empty = document.getElementById("empty");
+  const countEl = document.getElementById("count");
+  const qEl = document.getElementById("q");
+
+  // ───────── svg 파일 목록 수집 (소스 3종, 먼저 성공하는 것 사용) ─────────
+  // 1) 로컬 디렉터리 autoindex (python -m http.server 등)
+  async function listAutoindex() {
+    try {
+      const res = await fetch("./", { cache: "no-store" });
+      if (!res.ok) return [];
+      const ct = res.headers.get("content-type") || "";
+      if (!ct.includes("text/html")) return [];
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const names = [...doc.querySelectorAll("a[href]")]
+        .map(a => decodeURIComponent(a.getAttribute("href")))
+        .filter(h => /\.svg$/i.test(h))
+        .map(h => h.split("/").pop());
+      return [...new Set(names)];
+    } catch (e) { return []; }
+  }
+  // 2) GitHub Contents API (Pages·온라인)
+  async function listGitHub() {
+    try {
+      const url = "https://api.github.com/repos/" + GH.owner + "/" + GH.repo +
+                  "/contents/" + GH.path + "?ref=" + GH.branch;
+      const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
+      if (!res.ok) return [];
+      const arr = await res.json();
+      if (!Array.isArray(arr)) return [];
+      return arr.filter(it => it.type === "file" && /\.svg$/i.test(it.name)).map(it => it.name);
+    } catch (e) { return []; }
+  }
+  // 3) 수동 매니페스트 (icons.json: 파일명 배열)
+  async function listManifest() {
+    try {
+      const res = await fetch("icons.json", { cache: "no-store" });
+      if (!res.ok) return [];
+      const arr = await res.json();
+      return Array.isArray(arr) ? arr.filter(n => /\.svg$/i.test(n)) : [];
+    } catch (e) { return []; }
+  }
+
+  async function collect() {
+    for (const fn of [listAutoindex, listGitHub, listManifest]) {
+      const list = await fn();
+      if (list.length) return list.sort((a, b) => a.localeCompare(b));
+    }
+    return [];
+  }
+
+  // ───────── 클립보드 복사 ─────────
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) {}
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  // ───────── 셀 빌더 ─────────
+  function imgTag(name) {
+    const alt = name.replace(/\.svg$/i, "");
+    return '<img src="' + PAGES_BASE + name + '" alt="' + alt + '">';
+  }
+  function buildCell(name) {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.dataset.name = name.toLowerCase();
+
+    const thumb = document.createElement("div");
+    thumb.className = "thumb";
+    const img = document.createElement("img");
+    img.src = name;               // 썸네일은 상대경로 (로컬·Pages 양쪽 동작)
+    img.alt = name;
+    img.loading = "lazy";
+    thumb.appendChild(img);
+
+    const nm = document.createElement("div");
+    nm.className = "nm";
+    nm.textContent = name;
+
+    const btn = document.createElement("button");
+    btn.className = "copy";
+    btn.type = "button";
+    btn.textContent = "copy <img>";
+    btn.addEventListener("click", async () => {
+      const ok = await copyText(imgTag(name));
+      const orig = "copy <img>";
+      btn.textContent = ok ? "copied!" : "copy fail";
+      setTimeout(() => { btn.textContent = orig; }, 1200);
+    });
+
+    cell.appendChild(thumb);
+    cell.appendChild(nm);
+    cell.appendChild(btn);
+    return cell;
+  }
+
+  // ───────── 검색 필터 ─────────
+  qEl.addEventListener("input", () => {
+    const q = qEl.value.trim().toLowerCase();
+    let shown = 0;
+    grid.querySelectorAll(".cell").forEach(c => {
+      const hit = !q || c.dataset.name.includes(q);
+      c.style.display = hit ? "" : "none";
+      if (hit) shown++;
+    });
+    countEl.textContent = shown + " 개";
+  });
+
+  // ───────── 초기화 ─────────
+  (async function init() {
+    const names = await collect();
+    if (!names.length) {
+      const isFile = location.protocol === "file:";
+      empty.style.display = "block";
+      empty.innerHTML = isFile
+        ? "SVG 목록을 못 읽었습니다. <b><code>file://</code> 직접 열기는 막혀 있습니다.</b><br>" +
+          "<code>gicons/</code> 폴더에서 <code>python -m http.server 8000</code> 실행 후 " +
+          "<code>http://localhost:8000/gallery.html</code> 로 접속하세요.<br>" +
+          "또는 폴더에 <code>.svg</code> 파일을 추가한 뒤 GitHub에 push 하면 Pages에서 자동 표시됩니다."
+        : "이 폴더에 <code>.svg</code> 파일이 없습니다. SVG를 추가하고 새로고침(또는 push) 하세요.";
+      countEl.textContent = "0 개";
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    names.forEach(n => frag.appendChild(buildCell(n)));
+    grid.appendChild(frag);
+    countEl.textContent = names.length + " 개";
+  })();
+</script>
+</body>
+</html>

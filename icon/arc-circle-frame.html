@@ -197,7 +197,6 @@
     </svg>
   </div>
     <button id="c-export" type="button" class="export-btn">export svg</button>
-    <button id="c-copy" type="button" class="export-btn">copy icon</button>
   </div>
 
   <!-- 탭: frame / front / back / guide (미리보기 아래) -->
@@ -461,6 +460,7 @@
   function thumb(item) {
     const el = document.createElement("div");
     el.className = "part";
+    el.dataset.id = item.id;
     const svg = document.createElementNS(SVGNS, "svg");
     svg.setAttribute("viewBox", VIEWBOX);
     svg.innerHTML = item.inner;
@@ -802,36 +802,103 @@
       URL.revokeObjectURL(url);
     });
 
-    // ───────── copy icon: 인라인 <svg> 태그 클립보드 복사 ─────────
-    // 다른 html 에 그대로 붙여넣으면 표시되는 자기완결 마크업
-    document.getElementById("c-copy").addEventListener("click", async () => {
-      const btn = document.getElementById("c-copy");
-      const markup = buildStandaloneSvg();
-      const done = ok => {
-        const orig = "copy icon";
-        btn.textContent = ok ? "copied!" : "copy fail";
-        setTimeout(() => { btn.textContent = orig; }, 1200);
+    // ───────── 설정값 영속화 (localStorage) ─────────
+    const LS_KEY = "hhg-icon-builder-v1";
+    let restoring = false;
+    const CTL_IDS = [
+      "c-fill", "c-fill-a", "c-main", "c-point", "c-back", "c-front-ocolor", "c-back-ocolor",
+      "c-stroke", "c-front-size", "c-front-line", "c-front-stroke",
+      "c-back-size", "c-back-line", "c-back-stroke"
+    ];
+    const activeAnchor = id => {
+      const b = document.querySelector("#" + id + " button.active");
+      return b ? b.dataset.a : "c";
+    };
+    const layerState = L => {
+      const a = document.querySelector('.parts[data-cen][data-layer="' + L + '"] .part.active');
+      const ti = document.getElementById("t-input-" + L);
+      const ts = document.getElementById("t-size-" + L);
+      return {
+        cen: a ? a.parentNode.dataset.cen : "insert",
+        id: a ? a.dataset.id : "none",
+        text: !!textApplied[L],
+        tinput: ti ? ti.value : "",
+        tsize: ts ? ts.value : "6"
       };
+    };
+    const quadId = q => {
+      const a = document.querySelector('.parts[data-quad="' + q + '"] .part.active');
+      return a ? a.dataset.id : "none";
+    };
+    function gatherState() {
+      const ctl = {};
+      CTL_IDS.forEach(id => { const e = document.getElementById(id); if (e) ctl[id] = e.value; });
+      const fullA = document.querySelector('.parts[data-full="1"] .part.active');
+      const tabA = document.querySelector(".tab.active");
+      return {
+        ctl,
+        aFront: activeAnchor("c-front-anchor"),
+        aBack: activeAnchor("c-back-anchor"),
+        tab: tabA ? tabA.dataset.tab : "frame",
+        frame: { full: fullA ? fullA.dataset.id : "none", tl: quadId("tl"), tr: quadId("tr"), bl: quadId("bl"), br: quadId("br") },
+        front: layerState("front"),
+        back: layerState("back")
+      };
+    }
+    function saveState() {
+      if (restoring) return;
+      try { localStorage.setItem(LS_KEY, JSON.stringify(gatherState())); } catch (e) {}
+    }
+    function restoreState() {
+      let s;
+      try { s = JSON.parse(localStorage.getItem(LS_KEY)); } catch (e) {}
+      if (!s) return;
+      restoring = true;
       try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(markup);
-        } else {
-          // file:// 또는 비보안 컨텍스트 폴백
-          const ta = document.createElement("textarea");
-          ta.value = markup;
-          ta.style.position = "fixed";
-          ta.style.opacity = "0";
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand("copy");
-          document.body.removeChild(ta);
+        const fire = el => el.dispatchEvent(new Event("input", { bubbles: true }));
+        const clickById = (sel, id) => {
+          if (!id) return;
+          const e = document.querySelector(sel + ' .part[data-id="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
+          if (e) e.click();
+        };
+        // 컨트롤 입력값
+        if (s.ctl) Object.keys(s.ctl).forEach(id => {
+          const e = document.getElementById(id);
+          if (e && s.ctl[id] != null) { e.value = s.ctl[id]; fire(e); }
+        });
+        // anchor
+        const clickAnchor = (cid, a) => {
+          const b = document.querySelector("#" + cid + ' button[data-a="' + a + '"]');
+          if (b) b.click();
+        };
+        if (s.aFront) clickAnchor("c-front-anchor", s.aFront);
+        if (s.aBack) clickAnchor("c-back-anchor", s.aBack);
+        // frame (full 우선, 없으면 분면)
+        if (s.frame) {
+          if (s.frame.full && s.frame.full !== "none") clickById('.parts[data-full="1"]', s.frame.full);
+          else ["tl", "tr", "bl", "br"].forEach(q => clickById('.parts[data-quad="' + q + '"]', s.frame[q]));
         }
-        done(true);
-      } catch (e) {
-        console.error(e);
-        done(false);
-      }
-    });
+        // center 레이어
+        ["front", "back"].forEach(L => {
+          const st = s[L]; if (!st) return;
+          const ti = document.getElementById("t-input-" + L);
+          const ts = document.getElementById("t-size-" + L);
+          if (ti && st.tinput != null) ti.value = st.tinput;
+          if (ts && st.tsize != null) { ts.value = st.tsize; fire(ts); }
+          if (st.text) { const ap = document.getElementById("t-apply-" + L); if (ap) ap.click(); }
+          else clickById('.parts[data-cen="' + (st.cen || "insert") + '"][data-layer="' + L + '"]', st.id);
+        });
+        // 탭
+        if (s.tab) { const t = document.querySelector('.tab[data-tab="' + s.tab + '"]'); if (t) t.click(); }
+      } catch (e) { console.error(e); }
+      restoring = false;
+      saveState();
+    }
+
+    // 모든 입력/클릭에서 저장 (선택 핸들러가 DOM 갱신한 뒤 버블링으로 도달)
+    document.addEventListener("input", saveState);
+    document.addEventListener("click", saveState);
+    restoreState();
   })();
 </script>
 </body>
