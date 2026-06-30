@@ -1,0 +1,15 @@
+{
+  "window.title": "HHG ${separator} ${activeEditorShort}${separator}${rootName}",
+  "window.titleBarStyle": "custom",
+  "workbench.colorCustomizations": {
+    "titleBar.activeForeground": "#FFEB3B",
+    "titleBar.inactiveForeground": "#FFF59D",
+    "titleBar.activeBackground": "#4D4000",
+    "titleBar.inactiveBackground": "#3A3000",
+    "sideBar.foreground": "#FFEB3B",
+    "sideBar.background": "#1A1500",
+    "list.activeSelectionForeground": "#FFFFFF",
+    "list.inactiveSelectionForeground": "#FFFFFF",
+    "list.focusForeground": "#FFFFFF"
+  }
+}

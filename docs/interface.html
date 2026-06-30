@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인터페이스 (interface)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Brand (테마 무관 고정) */
+  --hhg-yellow:#FFD400;
+  --hhg-yellow-soft:#FFE766;
+  --hhg-yellow-deep:#C9A600;
+  --on-brand:#1A1A17;
+  /* Semantic */
+  --success:#3FA66A;
+  --warning:#E0941A;
+  --error:#D24A4A;
+  --info:#3A78C2;
+  /* 코드블록 */
+  --code-bg:#161613;
+  --code-fg:#FAFAF7;
+  /* Radius */
+  --r-sm:6px; --r-md:10px; --r-lg:16px; --r-pill:9999px;
+  /* Space */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+  --font:"Inter",-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+/* ===== 라이트 테마 ===== */
+[data-theme="light"]{
+  --ink:#1A1A17; --body:#3D3D38; --muted:#7A7A72; --hairline:#E7E5DD;
+  --canvas:#FAFAF7; --surface:#FFFFFF; --surface-soft:#F4F3EE; --on-ink:#FAFAF7;
+  --sh-sm:0 1px 2px rgba(26,26,23,.06);
+  --sh-md:0 4px 16px rgba(26,26,23,.08);
+  --sh-lg:0 12px 40px rgba(26,26,23,.12);
+}
+/* ===== 다크 테마 (기본) ===== */
+[data-theme="dark"]{
+  --ink:#F5F4EC; --body:#CFCDC2; --muted:#8E8C82; --hairline:#33332B;
+  --canvas:#121210; --surface:#1C1C17; --surface-soft:#26261F; --on-ink:#121210;
+  --sh-sm:0 1px 2px rgba(0,0,0,.4);
+  --sh-md:0 4px 16px rgba(0,0,0,.45);
+  --sh-lg:0 12px 40px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--canvas);color:var(--body);
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+
+main{padding:var(--s8) var(--s8);max-width:980px;margin:0 auto}
+.hero{margin-bottom:var(--s8)}
+.eyebrow{display:inline-block;background:var(--code-bg);color:var(--hhg-yellow);
+  font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  padding:5px 12px;border-radius:var(--r-pill);margin-bottom:var(--s4)}
+h1{font-size:52px;line-height:1.05;letter-spacing:-.02em;color:var(--ink);font-weight:800}
+.hero p{font-size:19px;color:var(--muted);margin-top:var(--s4);max-width:60ch}
+
+section{margin-bottom:var(--s8);scroll-margin-top:var(--s5)}
+h2{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--hhg-yellow-deep);margin-bottom:var(--s2)}
+.sec-title{font-size:30px;font-weight:700;color:var(--ink);letter-spacing:-.01em;margin-bottom:var(--s5)}
+.card{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-lg);
+  padding:var(--s6);box-shadow:var(--sh-sm)}
+
+footer{margin-top:var(--s8);padding-top:var(--s5);border-top:1px solid var(--hairline);
+  font-size:13px;color:var(--muted)}
+
+/* 테마 토글 */
+.theme-toggle{display:inline-flex;align-items:center;gap:8px;margin-top:var(--s5);
+  padding:9px 12px;border:1px solid var(--hairline);border-radius:var(--r-md);
+  background:var(--surface-soft);color:var(--ink);font-family:var(--font);
+  font-size:13px;font-weight:600;cursor:pointer}
+.theme-toggle:hover{border-color:var(--hhg-yellow-deep)}
+[data-theme="dark"] .theme-toggle .sun{display:none}
+[data-theme="light"] .theme-toggle .moon{display:none}
+
+@media(max-width:860px){
+  main{padding:var(--s6) var(--s5)}
+  h1{font-size:38px}
+}
+</style>
+</head>
+<body>
+  <main>
+    <div class="hero">
+      <span class="eyebrow">HHG</span>
+      <h1>인터페이스 (interface)</h1>
+    </div>
+
+    <!-- 내용은 아직 비어 있음 -->
+
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span class="moon">🌙 다크 모드</span><span class="sun">☀️ 라이트 모드</span>
+    </button>
+
+    <footer>HHG · interface</footer>
+  </main>
+
+<script>
+function toggleTheme(){
+  const el=document.documentElement;
+  el.setAttribute("data-theme", el.getAttribute("data-theme")==="dark" ? "light" : "dark");
+}
+</script>
+</body>
+</html>
