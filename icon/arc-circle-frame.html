@@ -197,6 +197,7 @@
     </svg>
   </div>
     <button id="c-export" type="button" class="export-btn">export svg</button>
+    <button id="c-copy" type="button" class="export-btn">copy icon</button>
   </div>
 
   <!-- 탭: frame / front / back / guide (미리보기 아래) -->
@@ -751,9 +752,9 @@
     document.getElementById("c-front-ocolor").addEventListener("input", () => rebuildOutline("front"));
     document.getElementById("c-back-ocolor").addEventListener("input", () => rebuildOutline("back"));
 
-    // ───────── export: 합본 svg 다운로드 ─────────
+    // ───────── 합본 svg 빌더 (export·copy 공용) ─────────
     // CSS 변수(색·선두께)는 standalone svg 에서 안 풀리므로 실제 값으로 인라인
-    document.getElementById("c-export").addEventListener("click", () => {
+    function buildStandaloneSvg() {
       const src = document.querySelector(".preview svg");
       const clone = src.cloneNode(true);
       const cs = getComputedStyle(document.documentElement);
@@ -787,14 +788,49 @@
         "#slot-ins-back .ins{stroke:" + back + "}" +
         "#slot-ins-back .ins-dot,#slot-ins-back .ins-text,#slot-ins-back .ins-solid{fill:" + back + "}";
       clone.insertBefore(style, clone.firstChild);
+      return new XMLSerializer().serializeToString(clone);
+    }
 
-      const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
+    // ───────── export: 합본 svg 다운로드 ─────────
+    document.getElementById("c-export").addEventListener("click", () => {
+      const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + buildStandaloneSvg();
       const url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml" }));
       const a = document.createElement("a");
       a.href = url;
       a.download = "hhg-icon.svg";
       a.click();
       URL.revokeObjectURL(url);
+    });
+
+    // ───────── copy icon: 인라인 <svg> 태그 클립보드 복사 ─────────
+    // 다른 html 에 그대로 붙여넣으면 표시되는 자기완결 마크업
+    document.getElementById("c-copy").addEventListener("click", async () => {
+      const btn = document.getElementById("c-copy");
+      const markup = buildStandaloneSvg();
+      const done = ok => {
+        const orig = "copy icon";
+        btn.textContent = ok ? "copied!" : "copy fail";
+        setTimeout(() => { btn.textContent = orig; }, 1200);
+      };
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(markup);
+        } else {
+          // file:// 또는 비보안 컨텍스트 폴백
+          const ta = document.createElement("textarea");
+          ta.value = markup;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+        }
+        done(true);
+      } catch (e) {
+        console.error(e);
+        done(false);
+      }
     });
   })();
 </script>
